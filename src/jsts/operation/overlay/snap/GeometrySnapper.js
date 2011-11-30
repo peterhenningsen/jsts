@@ -43,11 +43,8 @@ jsts.operation.overlay.snap.GeometrySnapper.snap = function(g0, g1,
 
   var snapper0 = new jsts.operation.overlay.snap.GeometrySnapper(g0);
 
-  alert('Före snapTo');
-
   snapGeom[0] = snapper0.snapTo(g1, snapTolerance);
 
-  alert('Efter snapTo');
   /**
    * Snap the second geometry to the snapped first geometry (this strategy
    * minimizes the number of possible different points in the result)
@@ -69,13 +66,10 @@ jsts.operation.overlay.snap.GeometrySnapper.snap = function(g0, g1,
  */
 jsts.operation.overlay.snap.GeometrySnapper.prototype.snapTo = function(
     snapGeom, snapTolerance) {
-  alert('Inne i jsts.operation.overlay.snap.GeometrySnapper.prototype.snapTo');
   snapPts = this.extractTargetCoordinates(snapGeom);
-  alert('efter extractTargetCoordinates');
 
   var snapTrans = new jsts.operation.overlay.snap.SnapTransformer(
       snapTolerance, snapPts);
-  alert('efter snapTrans');
 
   return snapTrans.transform(this.srcGeom);
 };
@@ -140,16 +134,24 @@ jsts.operation.overlay.snap.SnapTransformer.constructor = jsts.operation.overlay
 
 jsts.operation.overlay.snap.SnapTransformer.prototype.transformCoordinates = function(
     coords, parent) {
-  //var srcPts = coords.toCoordinateArray();
-//  var newPts = this.snapLine(srcPts, snapPts);
   var newPts = this.snapLine(coords, snapPts);
-  
-  return this.factory.getCoordinateSequenceFactory().create(newPts);
+
+  var coordseq = [];
+
+  for ( var i = 0; i < newPts.length - 1; i++) {
+    coordseq.push({
+      'x': newPts[i].x,
+      'y': newPts[i].y
+    });
+  }
+
+  return coordseq;
 };
 jsts.operation.overlay.snap.SnapTransformer.prototype.snapLine = function(
     srcPts, snapPts) {
-  var snapper = new LineStringSnapper(srcPts, snapTolerance);
-  snapper.setAllowSnappingToSourceVertices(isSelfSnap);
+  var snapper = new jsts.operation.overlay.snap.LineStringSnapper(srcPts,
+      this.snapTolerance);
+  snapper.setAllowSnappingToSourceVertices(this.isSelfSnap);
 
   return snapper.snapTo(snapPts);
 };

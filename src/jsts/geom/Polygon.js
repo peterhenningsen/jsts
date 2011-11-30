@@ -12,7 +12,7 @@
    * holes may touch the shell or other holes at a single point. However, no
    * sequence of touching holes may split the polygon into two pieces. The
    * orientation of the rings in the polygon does not matter.
-   *
+   * 
    * The shell and holes must conform to the assertions specified in the <A
    * HREF="http://www.opengis.org/techno/specs.htm">OpenGIS Simple Features
    * Specification for SQL</A>.
@@ -42,9 +42,40 @@
     }
   }
 
+  jsts.geom.Polygon.prototype.isEmpty = function() {
+    var shell = this.components[0];
+
+    return shell.isEmpty();
+  };
 
   jsts.geom.Polygon.prototype.getCoordinate = function() {
     return this.components[0].getCoordinate();
+  };
+
+  jsts.geom.Polygon.prototype.getCoordinates = function() {
+    if (this.isEmpty()) {
+      return [];
+    }
+    var coordinates = [];// new jsts.geom.Coordinate(x, y)
+    // Coordinate[] coordinates = new Coordinate[getNumPoints()];
+    var k = -1;
+    var shell = this.components[0];
+
+    var shellCoordinates = shell.getCoordinates();
+    for ( var x = 0; x < shellCoordinates.length; x++) {
+      k++;
+      coordinates[k] = shellCoordinates[x];
+    }
+    
+    var holes = this.components.slice(1);
+    for ( var i = 0; i < holes.length; i++) {
+      var childCoordinates = holes[i].getCoordinates();
+      for ( var j = 0; j < childCoordinates.length; j++) {
+        k++;
+        coordinates[k] = childCoordinates[j];
+      }
+    }
+    return coordinates;
   };
 
 
@@ -52,7 +83,7 @@
    * @return {boolean}
    */
   jsts.geom.Polygon.prototype.isEmpty = function() {
-    for (var i = 0; i < this.components.length; i++) {
+    for ( var i = 0; i < this.components.length; i++) {
       if (!this.components[i].isEmpty()) {
         return false;
       }
@@ -77,7 +108,7 @@
 
   /**
    * Computes the boundary of this geometry
-   *
+   * 
    * @return {Geometry} a lineal geometry (which may be empty).
    * @see Geometry#getBoundary
    */
@@ -89,7 +120,7 @@
     var shell = this.components[0];
     rings[0] = shell;
     var holes = this.components.slice(1);
-    for (var i = 0; i < holes.length; i++) {
+    for ( var i = 0; i < holes.length; i++) {
       rings[i + 1] = holes[i];
     }
     // create LineString or MultiLineString as appropriate
@@ -145,7 +176,7 @@
     if (holes.length !== otherPolygonHoles.length) {
       return false;
     }
-    for (var i = 0; i < holes.length; i++) {
+    for ( var i = 0; i < holes.length; i++) {
       if (!(holes[i]).equalsExact(otherPolygonHoles[i], tolerance)) {
         return false;
       }
@@ -165,18 +196,16 @@
       var shell = this.components[0];
       shell.apply(filter);
       var holes = this.components.slice(1);
-      for (var i = 0; i < holes.length; i++) {
+      for ( var i = 0; i < holes.length; i++) {
         holes[i].apply(filter);
       }
-    }
-    else if (filter instanceof jsts.geom.GeometryFilter) {
+    } else if (filter instanceof jsts.geom.GeometryFilter) {
       filter.filter(this);
-    }
-    else if (filter instanceof jsts.geom.CoordinateFilter) {
+    } else if (filter instanceof jsts.geom.CoordinateFilter) {
       var shell = this.components[0];
       shell.apply(filter);
       var holes = this.components.slice(1);
-      for (var i = 0; i < holes.length; i++) {
+      for ( var i = 0; i < holes.length; i++) {
         holes[i].apply(filter);
       }
     }
@@ -186,7 +215,7 @@
     var shell = this.components[0];
     this.normalize2(shell, true);
     var holes = this.components.slice(1);
-    for (var i = 0; i < holes.length; i++) {
+    for ( var i = 0; i < holes.length; i++) {
       this.normalize2(holes[i], false);
     }
     // TODO: might need to supply comparison function
@@ -201,8 +230,10 @@
     if (ring.isEmpty()) {
       return;
     }
-    var uniqueCoordinates = ring.components.slice(0, ring.components.length - 1);
-    var minCoordinate = jsts.geom.CoordinateArrays.minCoordinate(ring.components);
+    var uniqueCoordinates = ring.components
+        .slice(0, ring.components.length - 1);
+    var minCoordinate = jsts.geom.CoordinateArrays
+        .minCoordinate(ring.components);
     jsts.geom.CoordinateArrays.scroll(uniqueCoordinates, minCoordinate);
     ring.components = uniqueCoordinates.concat();
     ring.components[uniqueCoordinates.length] = uniqueCoordinates[0];

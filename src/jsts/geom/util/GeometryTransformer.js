@@ -203,8 +203,8 @@ jsts.geom.util.GeometryTransformer.prototype.transformMultiPoint = function(
  */
 jsts.geom.util.GeometryTransformer.prototype.transformLinearRing = function(
     geom, parent) {
-  var seq = this.transformCoordinates(geom.getCoordinateSequence(), geom);
-  var seqSize = seq.size();
+  var seq = geom.components;
+  var seqSize = seq.length;
   // ensure a valid LinearRing
   if (seqSize > 0 && seqSize < 4 && !preserveType) {
     return this.factory.createLineString(seq);
@@ -247,7 +247,7 @@ jsts.geom.util.GeometryTransformer.prototype.transformPolygon = function(geom,
   var isAllValidLinearRings = true;
   shell = this.transformLinearRing(geom.getExteriorRing(), geom);
 
-  if (shell === null || !(shell instanceof LinearRing) || shell.isEmpty()) {
+  if (shell === null || !(shell instanceof jsts.geom.LinearRing) || shell.isEmpty()) {
     isAllValidLinearRings = false;
   }
   // return factory.createPolygon(null, null);
@@ -258,10 +258,10 @@ jsts.geom.util.GeometryTransformer.prototype.transformPolygon = function(geom,
     if (hole === null || hole.isEmpty()) {
       continue;
     }
-    if (!(hole instanceof LinearRing)) {
+    if (!(hole instanceof jsts.geom.LinearRing)) {
       isAllValidLinearRings = false;
     }
-    holes.add(hole);
+    holes.push(hole);
   }
 
   if (isAllValidLinearRings) {
@@ -277,7 +277,8 @@ jsts.geom.util.GeometryTransformer.prototype.transformPolygon = function(geom,
 
 jsts.geom.util.GeometryTransformer.prototype.transformMultiPolygon = function(
     geom, parent) {
-  var transGeomList = [];
+  var transGeomList = new javascript.util.ArrayList();
+
   for (var i = 0; i < geom.getNumGeometries(); i++) {
     var transformGeom = this.transformPolygon(geom.getGeometryN(i), geom);
     if (transformGeom === null) {
@@ -286,7 +287,7 @@ jsts.geom.util.GeometryTransformer.prototype.transformMultiPolygon = function(
     if (transformGeom.isEmpty()) {
       continue;
     }
-    transGeomList.push(transformGeom);
+    transGeomList.add(transformGeom);
   }
   return this.factory.buildGeometry(transGeomList);
 };
