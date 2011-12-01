@@ -6,17 +6,17 @@
 
 
 /**
- * Snaps the vertices and segments of a {@link LineString}
- * to a set of target snap vertices.
- * A snap distance tolerance is used to control where snapping is performed.
+ * Snaps the vertices and segments of a {@link LineString} to a set of target
+ * snap vertices. A snap distance tolerance is used to control where snapping is
+ * performed.
  * <p>
  * The implementation handles empty geometry and empty snap vertex sets.
- *
+ * 
  */
 (function() {
   /**
    * Constructs a new LineStringSnapper based on provided arguments
-   *
+   * 
    * @constructor
    */
   var LineStringSnapper = function() {
@@ -28,15 +28,15 @@
 
     if (arguments[0] instanceof jsts.geom.LineString) {
       this.initFromLine.apply(this, arguments);
-    }else {
+    } else {
       this.initFromPoints.apply(this, arguments);
     }
   };
 
   /**
-   * Creates a new snapper using the points in the given {@link LineString}
-   * as source snap points.
-   *
+   * Creates a new snapper using the points in the given {@link LineString} as
+   * source snap points.
+   * 
    * @param {jsts.geom.LineString}
    *          srcLine a LineString to snap (may be empty).
    * @param {Number}
@@ -47,9 +47,9 @@
   };
 
   /**
-   * Creates a new snapper using the given points
-   * as source points to be snapped.
-   *
+   * Creates a new snapper using the given points as source points to be
+   * snapped.
+   * 
    * @param {Array{jsts.geom.Coordinate}}
    *          srcPts the points to snap
    * @param {Number}
@@ -61,7 +61,8 @@
     this.snapTolerance = snapTolerance;
   };
 
-  LineStringSnapper.prototype.setAllowSnappingToSourceVertices = function(allowSnappingToSourceVertices) {
+  LineStringSnapper.prototype.setAllowSnappingToSourceVertices = function(
+      allowSnappingToSourceVertices) {
     this.allowSnappingToSourceVertices = allowSnappingToSourceVertices;
   };
 
@@ -74,16 +75,14 @@
   };
 
   /**
-   * Snaps the vertices and segments of the source LineString
-   * to the given set of snap vertices.
-   *
+   * Snaps the vertices and segments of the source LineString to the given set
+   * of snap vertices.
+   * 
    * @param {Array{Coordinate}}
    *          snapPts the vertices to snap to
-   * @return {Array{Coordinate}}
-   *          a list of the snapped points
+   * @return {Array{Coordinate}} a list of the snapped points
    */
-  LineStringSnapper.prototype.snapTo = function(snapPts)
-  {
+  LineStringSnapper.prototype.snapTo = function(snapPts) {
     var coordList = new jsts.geom.CoordinateList(this.srcPts);
     this.snapVertices(coordList, snapPts);
     this.snapSegments(coordList, snapPts);
@@ -93,7 +92,7 @@
 
   /**
    * Snap source vertices to vertices in the target.
-   *
+   * 
    * @param {jsts.geom.CoordinateList}
    *          srcCoords the points to snap.
    * @param {Array{Coordinate}}
@@ -108,14 +107,13 @@
       snapVert = this.findSnapForVertex(srcPt, snapPts);
       if (snapVert !== null) {
         // update src with snap pt
-        srcCoords.set(i, new jsts.geom.Coordinate(snapVert));
+        srcCoords[i] = new jsts.geom.Coordinate(snapVert);
         // keep final closing point in synch (rings only)
         if (i === 0 && this.isClosed)
-          srcCoords.set(srcCoords.length - 1, new jsts.geom.Coordinate(snapVert));
+          srcCoords[srcCoords.length - 1] = new jsts.geom.Coordinate(snapVert);
       }
     }
   };
-
 
   LineStringSnapper.prototype.findSnapForVertex = function(pt, snapPts) {
     var i = 0, il = snapPts.length;
@@ -133,16 +131,14 @@
   };
 
   /**
-   * Snap segments of the source to nearby snap vertices.
-   * Source segments are "cracked" at a snap vertex.
-   * A single input segment may be snapped several times
-   * to different snap vertices.
+   * Snap segments of the source to nearby snap vertices. Source segments are
+   * "cracked" at a snap vertex. A single input segment may be snapped several
+   * times to different snap vertices.
    * <p>
-   * For each distinct snap vertex, at most one source segment
-   * is snapped to.  This prevents "cracking" multiple segments
-   * at the same point, which would likely cause
-   * topology collapse when being used on polygonal linework.
-   *
+   * For each distinct snap vertex, at most one source segment is snapped to.
+   * This prevents "cracking" multiple segments at the same point, which would
+   * likely cause topology collapse when being used on polygonal linework.
+   * 
    * @param {jsts.geom.CoordinateList}
    *          srcCoords the coordinates of the source linestring to be snapped.
    * @param {Array{jsts.geom.Coordinate}}
@@ -157,9 +153,10 @@
     var distinctPtCount = snapPts.length, i, snapPt, index;
 
     // check for duplicate snap pts when they are sourced from a linear ring.
-    // TODO: Need to do this better - need to check *all* snap points for dups (using a Set?)
+    // TODO: Need to do this better - need to check *all* snap points for dups
+    // (using a Set?)
     if (snapPts.length > 1 && snapPts[0].equals(snapPts[snapPts.length - 1])) {
-        distinctPtCount = snapPts.length - 1;
+      distinctPtCount = snapPts.length - 1;
     }
 
     i = 0;
@@ -167,13 +164,14 @@
       snapPt = snapPts[i];
       index = this.findSegmentIndexToSnap(snapPt, srcCoords);
       /**
-       * If a segment to snap to was found, "crack" it at the snap pt.
-       * The new pt is inserted immediately into the src segment list,
-       * so that subsequent snapping will take place on the modified segments.
-       * Duplicate points are not added.
+       * If a segment to snap to was found, "crack" it at the snap pt. The new
+       * pt is inserted immediately into the src segment list, so that
+       * subsequent snapping will take place on the modified segments. Duplicate
+       * points are not added.
        */
       if (index >= 0) {
-        srcCoords.insertCoordinate(index + 1, new jsts.geom.Coordinate(snapPt), false);
+        srcCoords.insertCoordinate(index + 1, new jsts.geom.Coordinate(snapPt),
+            false);
       }
     }
   };
@@ -181,43 +179,38 @@
   /**
    * Finds a src segment which snaps to (is close to) the given snap point.
    * <p>
-   * Only a single segment is selected for snapping.
-   * This prevents multiple segments snapping to the same snap vertex,
-   * which would almost certainly cause invalid geometry
-   * to be created.
-   * (The heuristic approach to snapping used here
-   * is really only appropriate when
-   * snap pts snap to a unique spot on the src geometry.)
+   * Only a single segment is selected for snapping. This prevents multiple
+   * segments snapping to the same snap vertex, which would almost certainly
+   * cause invalid geometry to be created. (The heuristic approach to snapping
+   * used here is really only appropriate when snap pts snap to a unique spot on
+   * the src geometry.)
    * <p>
-   * Also, if the snap vertex occurs as a vertex in the src coordinate list,
-   * no snapping is performed.
-   *
+   * Also, if the snap vertex occurs as a vertex in the src coordinate list, no
+   * snapping is performed.
+   * 
    * @param {jsts.geom.Coordinate}
    *          snapPt the point to snap to.
    * @param {jsts.geom.CoordinateList}
    *          srcCoords the source segment coordinates.
-   * @return {Number}
-   *          the index of the snapped segment.
-   * @return {Number}
-   *            -1 if no segment snaps to the snap point.
+   * @return {Number} the index of the snapped segment.
+   * @return {Number} -1 if no segment snaps to the snap point.
    */
-  LineStringSnapper.prototype.findSegmentIndexToSnap = function(snapPt, srcCoords) {
+  LineStringSnapper.prototype.findSegmentIndexToSnap = function(snapPt,
+      srcCoords) {
     var minDist = Number.MAX_VALUE, snapIndex = -1, i = 0, dist;
-
     for (i; i < srcCoords.length - 1; i++) {
       this.seg.p0 = srcCoords[i];
       this.seg.p1 = srcCoords[i + 1];
 
       /**
        * Check if the snap pt is equal to one of the segment endpoints.
-       *
+       * 
        * If the snap pt is already in the src list, don't snap at all.
        */
       if (this.seg.p0.equals(snapPt) || this.seg.p1.equals(snapPt)) {
         if (this.allowSnappingToSourceVertices) {
           continue;
-        }
-        else {
+        } else {
           return -1;
         }
       }
