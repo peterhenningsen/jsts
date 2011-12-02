@@ -28,14 +28,14 @@ jsts.operation.overlay.snap.GeometrySnapper.SNAP_PRECISION_FACTOR = 1e-9;
 
 /**
  * Snaps two geometries together with a given tolerance.
- * 
- * @param g0
- *          a geometry to snap.
- * @param g1
- *          a geometry to snap.
- * @param snapTolerance
- *          the tolerance to use.
- * @return the snapped geometries.
+ *
+ * @param {jsts.geom.Geometry}
+ *          g0 the geometry to snap.
+ * @param {jsts.geom.Geometry}
+ *          g1 the geometry to snap.
+ * @param {Number}
+ *          snapTolerance the tolerance to use.
+ * @return {Array{jsts.geom.Geometry}} the snapped geometries.
  */
 jsts.operation.overlay.snap.GeometrySnapper.snap = function(g0, g1,
     snapTolerance) {
@@ -49,7 +49,7 @@ jsts.operation.overlay.snap.GeometrySnapper.snap = function(g0, g1,
    * Snap the second geometry to the snapped first geometry (this strategy
    * minimizes the number of possible different points in the result)
    */
-  snapper1 = new jsts.operation.overlay.snap.GeometrySnapper(g1);
+  var snapper1 = new jsts.operation.overlay.snap.GeometrySnapper(g1);
   snapGeom[1] = snapper1.snapTo(snapGeom[0], snapTolerance);
 
   return snapGeom;
@@ -57,16 +57,16 @@ jsts.operation.overlay.snap.GeometrySnapper.snap = function(g0, g1,
 };
 
 /**
- * Snaps the vertices in the component {@link LineString}s of the source
+ * Snaps the vertices in the component {jsts.geom.LineString}s of the source
  * geometry to the vertices of the given snap geometry.
- * 
- * @param snapGeom
- *          a geometry to snap the source to.
- * @return a new snapped Geometry.
+ *
+ * @param {jsts.geom.Geometry}
+ *          snapGeom a geometry to snap the source to.
+ * @return {jsts.geom.Geometry} a new snapped Geometry.
  */
 jsts.operation.overlay.snap.GeometrySnapper.prototype.snapTo = function(
     snapGeom, snapTolerance) {
-  snapPts = this.extractTargetCoordinates(snapGeom);
+  var snapPts = this.extractTargetCoordinates(snapGeom);
 
   var snapTrans = new jsts.operation.overlay.snap.SnapTransformer(
       snapTolerance, snapPts);
@@ -77,19 +77,19 @@ jsts.operation.overlay.snap.GeometrySnapper.prototype.snapTo = function(
 /**
  * Snaps the vertices in the component {@link LineString}s of the source
  * geometry to the vertices of the given snap geometry.
- * 
- * @param snapGeom
- *          a geometry to snap the source to.
- * @return a new snapped Geometry.
+ *
+ * @param {jsts.geom.Geometry}
+ *          snapGeom a geometry to snap the source to.
+ * @return {jsts.geom.Geometry} a new snapped Geometry.
  */
 jsts.operation.overlay.snap.GeometrySnapper.prototype.snapToSelf = function(
     snapTolerance, cleanResult) {
-  snapPts = this.extractTargetCoordinates(this.srcGeom);
+  var snapPts = this.extractTargetCoordinates(this.srcGeom);
 
-  snapTrans = new jsts.operation.overlay.snap.GeometrySnapper.SnapTransformer(
+  var snapTrans = new jsts.operation.overlay.snap.GeometrySnapper.SnapTransformer(
       snapTolerance, snapPts, true);
-  snappedGeom = snapTrans.transform(this.srcGeom);
-  result = snappedGeom;
+  var snappedGeom = snapTrans.transform(this.srcGeom);
+  var result = snappedGeom;
   if (cleanResult && result instanceof Polygonal) {
     // TODO: use better cleaning approach
     result = snappedGeom.buffer(0);
@@ -103,17 +103,16 @@ jsts.operation.overlay.snap.GeometrySnapper.prototype.extractTargetCoordinates =
   // KDTree for uniqueness & queries
   var ptSet = new javascript.util.TreeSet();
   var pts = g.getCoordinates();
-  for ( var i = 0; i < pts.length; i++) {
+  for (var i = 0; i < pts.length; i++) {
     ptSet.add(pts[i]);
   }
   return ptSet.toArray();
-  // return ptSet.toArray(new Coordinate[0]);
 };
 
 
 /**
  * @constructor
- * @returns {jsts.operation.overlay.snap.SnapTransformer}
+ * @return {jsts.operation.overlay.snap.SnapTransformer}
  */
 jsts.operation.overlay.snap.SnapTransformer = function() {
   if (arguments.length === 2) {
@@ -134,15 +133,12 @@ jsts.operation.overlay.snap.SnapTransformer.constructor = jsts.operation.overlay
 
 jsts.operation.overlay.snap.SnapTransformer.prototype.transformCoordinates = function(
     coords, parent) {
-  var newPts = this.snapLine(coords, snapPts);
+  var newPts = this.snapLine(coords, this.snapPts);
 
   var coordseq = [];
 
-  for ( var i = 0; i < newPts.length - 1; i++) {
-    coordseq.push({
-      'x': newPts[i].x,
-      'y': newPts[i].y
-    });
+  for (var i = 0; i < newPts.length - 1; i++) {
+    coordseq.push(newPts[i]);
   }
 
   return coordseq;

@@ -58,7 +58,7 @@ jsts.geom.util.GeometryTransformer = function() {
 
   /**
    * <code>true</code> if a homogenous collection result from a
-   * {@link GeometryCollection} should still be a general GeometryCollection
+   * {jsts.geom.GeometryCollection} should still be a general GeometryCollection
    */
   this.preserveGeometryCollectionType = true;
 
@@ -71,18 +71,19 @@ jsts.geom.util.GeometryTransformer = function() {
   /**
    * <code>true</code> if the type of the input should be preserved
    */
-  this.preserveType = false;
+  this.preserveType = true;
 
 };
 
-jsts.geom.util.GeometryTransformer.prototype.getCoordinateSequence = function(geom){
-  alert('Implement jsts.geom.util.GeometryTransformer.prototype.getCoordinateSequence');
+jsts.geom.util.GeometryTransformer.prototype.getCoordinateSequence = function(
+    geom) {
+  throw new jsts.error.NotImplementedError();
 };
 
 /**
  * Utility function to make input geometry available
- *
- * @return the input geometry.
+ * 
+ * @return {jsts.geom.Geometry} the input geometry.
  */
 jsts.geom.util.GeometryTransformer.prototype.getInputGeometry = function() {
   return this.inputGeom;
@@ -116,28 +117,25 @@ jsts.geom.util.GeometryTransformer.prototype.transform = function(inputGeom) {
   if (inputGeom instanceof jsts.geom.GeometryCollection) {
     return this.transformGeometryCollection(inputGeom, null);
   }
-
-  // throw new IllegalArgumentException('Unknown Geometry subtype: ' +
-  // inputGeom.getClass().getName());
 };
 
 /**
  * Convenience method which provides standard way of creating a
  * {@link CoordinateSequence}
- *
+ * 
  * @param coords
  *          the coordinate array to copy.
  * @return a coordinate sequence for the array.
  */
 jsts.geom.util.GeometryTransformer.prototype.createCoordinateSequence = function(
     coords) {
-  return this.factory.getCoordinateSequenceFactory().create(coords);
+  throw new jsts.error.NotImplementedError();
 };
 
 /**
- * Convenience method which provides statndard way of copying
+ * Convenience method which provides standard way of copying
  * {@link CoordinateSequence}s
- *
+ * 
  * @param seq
  *          the sequence to copy.
  * @return a deep copy of the sequence.
@@ -147,13 +145,13 @@ jsts.geom.util.GeometryTransformer.prototype.copy = function(seq) {
 };
 
 /**
- * Transforms a {@link CoordinateSequence}. This method should always return a
- * valid coordinate list for the desired result type. (E.g. a coordinate list
- * for a LineString must have 0 or at least 2 points). If this is not possible,
- * return an empty sequence - this will be pruned out.
- *
- * @param coords
- *          the coordinates to transform.
+ * Transforms a {Coordinate[]} This method should always return a valid
+ * coordinate list for the desired result type. (E.g. a coordinate list for a
+ * LineString must have 0 or at least 2 points). If this is not possible, return
+ * an empty sequence - this will be pruned out.
+ * 
+ * @param {Coordinate[]}
+ *          coords the coordinates to transform.
  * @param parent
  *          the parent geometry.
  * @return the transformed coordinates.
@@ -165,14 +163,13 @@ jsts.geom.util.GeometryTransformer.prototype.transformCoordinates = function(
 
 jsts.geom.util.GeometryTransformer.prototype.transformPoint = function(geom,
     parent) {
-  
-  return this.factory.createPoint(this.transformCoordinates(this.getCoordinateSequence(geom), geom));
+  throw new jsts.error.NotImplementedError();
 };
 
 jsts.geom.util.GeometryTransformer.prototype.transformMultiPoint = function(
     geom, parent) {
-  var transGeomList = [];
-  for (var i = 0; i < geom.getNumGeometries(); i++) {
+  var transGeomList = new javascript.util.ArrayList();
+  for ( var i = 0; i < geom.getNumGeometries(); i++) {
     var transformGeom = this.transformPoint(geom.getGeometryN(i), geom);
     if (transformGeom === null) {
       continue;
@@ -191,22 +188,22 @@ jsts.geom.util.GeometryTransformer.prototype.transformMultiPoint = function(
  * degnerate ring of 3 or fewer points). In this case a LineString is returned.
  * Subclasses may wish to override this method and check for this situation
  * (e.g. a subclass may choose to eliminate degenerate linear rings)
- *
- * @param geom
- *          the ring to simplify.
- * @param parent
- *          the parent geometry.
- * @return a LinearRing if the transformation resulted in a structurally valid
- *         ring.
- * @return a LineString if the transformation caused the LinearRing to collapse
- *         to 3 or fewer points.
+ * 
+ * @param {jsts.geom.LinearRing}
+ *          geom the ring to simplify.
+ * @param {jsts.geom.Polygon}
+ *          parent the parent geometry.
+ * @return {jsts.geom.LinearRing} a LinearRing if the transformation resulted in
+ *         a structurally valid ring.
+ * @return {jsts.geom.LineString} a LineString if the transformation caused the
+ *         LinearRing to collapse to 3 or fewer points.
  */
 jsts.geom.util.GeometryTransformer.prototype.transformLinearRing = function(
     geom, parent) {
-  var seq = geom.components;
+  var seq = this.transformCoordinates(geom.components);
   var seqSize = seq.length;
   // ensure a valid LinearRing
-  if (seqSize > 0 && seqSize < 4 && !preserveType) {
+  if (seqSize > 0 && seqSize < 4 && !this.preserveType) {
     return this.factory.createLineString(seq);
   }
   return this.factory.createLinearRing(seq);
@@ -214,22 +211,25 @@ jsts.geom.util.GeometryTransformer.prototype.transformLinearRing = function(
 };
 
 /**
- * Transforms a {@link LineString} geometry.
- *
- * @param geom
- * @param parent
- * @return
+ * Transforms a LineString geometry.
+ * 
+ * @param {jsts.geom.LineString}
+ *          geom a LineString.
+ * @param {jsts.geom.Geometry}
+ *          parent a Geometry.
+ * @return {jsts.geom.LineString}
  */
 jsts.geom.util.GeometryTransformer.prototype.transformLineString = function(
     geom, parent) {
   // should check for 1-point sequences and downgrade them to points
-  return this.factory.createLineString(this.transformCoordinates(geom.getCoordinates(), geom));
+  return this.factory.createLineString(this.transformCoordinates(geom
+      .getCoordinates(), geom));
 };
 
 jsts.geom.util.GeometryTransformer.prototype.transformMultiLineString = function(
     geom, parent) {
-  var transGeomList = [];
-  for (var i = 0; i < geom.getNumGeometries(); i++) {
+  var transGeomList = new javascript.util.ArrayList();
+  for ( var i = 0; i < geom.getNumGeometries(); i++) {
     transformGeom = this.transformLineString(geom.getGeometryN(i), geom);
     if (transformGeom === null) {
       continue;
@@ -247,13 +247,13 @@ jsts.geom.util.GeometryTransformer.prototype.transformPolygon = function(geom,
   var isAllValidLinearRings = true;
   shell = this.transformLinearRing(geom.getExteriorRing(), geom);
 
-  if (shell === null || !(shell instanceof jsts.geom.LinearRing) || shell.isEmpty()) {
+  if (shell === null || !(shell instanceof jsts.geom.LinearRing) ||
+      shell.isEmpty()) {
     isAllValidLinearRings = false;
   }
-  // return factory.createPolygon(null, null);
 
-  var holes = [];
-  for (var i = 0; i < geom.getNumInteriorRing(); i++) {
+  var holes = new javascript.util.ArrayList();
+  for ( var i = 0; i < geom.getNumInteriorRing(); i++) {
     var hole = this.transformLinearRing(geom.getInteriorRingN(i), geom);
     if (hole === null || hole.isEmpty()) {
       continue;
@@ -261,16 +261,18 @@ jsts.geom.util.GeometryTransformer.prototype.transformPolygon = function(geom,
     if (!(hole instanceof jsts.geom.LinearRing)) {
       isAllValidLinearRings = false;
     }
-    holes.push(hole);
+    holes.add(hole);
   }
 
   if (isAllValidLinearRings) {
-    return this.factory.createPolygon(shell, []);
+    return this.factory.createPolygon(shell, holes.toArray());
+    // return this.factory.createPolygon(shell, holes);
   } else {
-    var components = [];
-    if (shell != null)
-      components.push(shell);
-    components.splice(1, 0, holes);
+    var components = new javascript.util.ArrayList();
+    if (shell !== null) {
+      components.add(shell);
+    }
+    components.addAll(holes);
     return this.factory.buildGeometry(components);
   }
 };
@@ -279,7 +281,7 @@ jsts.geom.util.GeometryTransformer.prototype.transformMultiPolygon = function(
     geom, parent) {
   var transGeomList = new javascript.util.ArrayList();
 
-  for (var i = 0; i < geom.getNumGeometries(); i++) {
+  for ( var i = 0; i < geom.getNumGeometries(); i++) {
     var transformGeom = this.transformPolygon(geom.getGeometryN(i), geom);
     if (transformGeom === null) {
       continue;
@@ -294,8 +296,8 @@ jsts.geom.util.GeometryTransformer.prototype.transformMultiPolygon = function(
 
 jsts.geom.util.GeometryTransformer.prototype.transformGeometryCollection = function(
     geom, parent) {
-  var transGeomList = [];
-  for (var i = 0; i < geom.getNumGeometries(); i++) {
+  var transGeomList = new javascript.util.ArrayList();
+  for ( var i = 0; i < geom.getNumGeometries(); i++) {
     var transformGeom = this.transform(geom.getGeometryN(i));
     if (transformGeom === null) {
       continue;
@@ -303,10 +305,11 @@ jsts.geom.util.GeometryTransformer.prototype.transformGeometryCollection = funct
     if (pruneEmptyGeometry && transformGeom.isEmpty()) {
       continue;
     }
-    transGeomList.push(transformGeom);
+    transGeomList.add(transformGeom);
   }
   if (preserveGeometryCollectionType) {
-    return this.factory.createGeometryCollection(jsts.geom.GeometryFactory.toGeometryArray(transGeomList));
+    return this.factory.createGeometryCollection(jsts.geom.GeometryFactory
+        .toGeometryArray(transGeomList));
   }
   return this.factory.buildGeometry(transGeomList);
 };

@@ -140,7 +140,7 @@
   /**
    * Gets the boundary of this geometry. The boundary of a lineal geometry is
    * always a zero-dimensional geometry (which may be empty).
-   * 
+   *
    * @return {Geometry} the boundary geometry.
    * @see Geometry#getBoundary
    */
@@ -221,7 +221,7 @@
         filter instanceof jsts.geom.GeometryComponentFilter) {
       filter.filter(this);
     } else if (filter instanceof jsts.geom.CoordinateFilter) {
-      for ( var i = 0; i < this.components.length; i++) {
+      for (var i = 0; i < this.components.length; i++) {
         filter.filter(this.components[i]);
       }
     }
